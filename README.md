@@ -27,8 +27,16 @@ This creates `contract_info.json` with deployment details.
 
 ### 3. Train & Submit Parameters (Backend)
 
+For **Diabetes Prediction**:
+
 ```bash
 python scripts/train.py
+```
+
+For **Heart Disease Prediction**:
+
+```bash
+python scripts/train_heart.py
 ```
 
 Trains local NN model and submits parameters to blockchain.
@@ -115,12 +123,19 @@ Access React app at http://localhost:3000 with MetaMask integration
 ```
 ├── contracts/
 │   └── FederatedLearning.sol      # Smart contract for parameter storage/averaging
+├── data/
+│   ├── diabetes.csv               # Pima Indians Diabetes Dataset (768 samples)
+│   └── heart_disease/
+│       └── heart.csv              # Cleveland Heart Disease Dataset (303 samples)
 ├── model/
-│   └── nn_model.py                # PyTorch neural network for diabetes prediction
+│   ├── nn_model.py                # PyTorch neural network for diabetes prediction
+│   └── heart_model.py             # PyTorch neural network for heart disease prediction
 ├── scripts/
 │   ├── deploy_sepolia.py          # Contract deployment to Sepolia
-│   ├── train.py                   # Local training & blockchain submission
+│   ├── train.py                   # Diabetes training & blockchain submission
+│   ├── train_heart.py             # Heart disease training & blockchain submission
 │   └── predict.py                 # Parameter averaging & prediction testing
+├── federated-medical-app/         # React frontend with MetaMask integration
 ├── ui_new.py                      # Streamlit web interface
 ├── contract_info.json             # Deployed contract details
 └── README.md
@@ -149,16 +164,40 @@ Access React app at http://localhost:3000 with MetaMask integration
 
 ## 🏥 Medical Features
 
-The model predicts diabetes risk using:
+### Diabetes Prediction Model
 
-- Glucose level
-- Blood pressure
-- Insulin level
-- BMI
-- Age
-- Pregnancies
-- Skin thickness
-- Diabetes pedigree function
+The diabetes model uses the **Pima Indians Diabetes Dataset** with 8 features:
+
+- **Pregnancies**: Number of times pregnant
+- **Glucose**: Plasma glucose concentration (mg/dL)
+- **BloodPressure**: Diastolic blood pressure (mm Hg)
+- **SkinThickness**: Triceps skin fold thickness (mm)
+- **Insulin**: 2-Hour serum insulin (mu U/ml)
+- **BMI**: Body mass index (weight in kg/(height in m)^2)
+- **DiabetesPedigreeFunction**: Diabetes pedigree function
+- **Age**: Age (years)
+
+**Dataset Source**: The Pima Indians Diabetes Dataset is a publicly available dataset from the UCI Machine Learning Repository, containing 768 samples from Pima Indian women aged 21 and above.
+
+### Heart Disease Prediction Model
+
+The heart disease model uses the **Cleveland Heart Disease Dataset** with 13 features:
+
+- **Age**: Age in years
+- **Sex**: Sex (1 = male; 0 = female)
+- **CP**: Chest pain type (0-3)
+- **Trestbps**: Resting blood pressure (mm Hg)
+- **Chol**: Serum cholesterol (mg/dl)
+- **FBS**: Fasting blood sugar > 120 mg/dl (1 = true; 0 = false)
+- **Restecg**: Resting electrocardiographic results (0-2)
+- **Thalach**: Maximum heart rate achieved
+- **Exang**: Exercise induced angina (1 = yes; 0 = no)
+- **Oldpeak**: ST depression induced by exercise relative to rest
+- **Slope**: Slope of the peak exercise ST segment (0-2)
+- **CA**: Number of major vessels colored by fluoroscopy (0-3)
+- **Thal**: Thalassemia (1 = normal; 2 = fixed defect; 3 = reversable defect)
+
+**Dataset Source**: The Cleveland Heart Disease Dataset is a publicly available dataset from the UCI Machine Learning Repository, containing 303 samples for heart disease diagnosis.
 
 ## 🛠️ Technical Details
 

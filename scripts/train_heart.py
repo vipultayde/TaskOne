@@ -5,7 +5,7 @@ import sys
 import os
 import pandas as pd
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from model.nn_model import MedicalPredictor
+from model.heart_model import HeartDiseasePredictor
 from web3 import Web3
 import json
 import numpy as np
@@ -23,17 +23,17 @@ w3.eth.default_account = account.address
 contract = w3.eth.contract(address=contract_info['address'], abi=contract_info['abi'])
 
 # Create model
-model = MedicalPredictor()
+model = HeartDiseasePredictor()
 
-# Load real diabetes dataset
-print("Loading diabetes dataset...")
-data_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'diabetes.csv')
+# Load real heart disease dataset
+print("Loading heart disease dataset...")
+data_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'heart_disease', 'heart.csv')
 df = pd.read_csv(data_path)
 
 # Prepare features and labels
-features = ['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age']
+features = ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal']
 X = df[features].values
-y = df['Outcome'].values
+y = df['target'].values
 
 # Normalize features
 X = (X - X.mean(axis=0)) / X.std(axis=0)
@@ -48,7 +48,7 @@ print(f"Dataset loaded: {len(X)} samples with {len(features)} features")
 criterion = nn.BCELoss()  # Binary cross-entropy for classification
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-print("Training medical prediction model...")
+print("Training heart disease prediction model...")
 for epoch in range(200):
     optimizer.zero_grad()
     outputs = model(X)
