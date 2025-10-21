@@ -1,0 +1,5 @@
+torch
+web3
+py-solc-x
+numpy
+streamlit
