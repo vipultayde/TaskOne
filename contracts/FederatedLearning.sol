@@ -46,6 +46,30 @@ contract FederatedLearning {
         emit ParametersSubmitted(msg.sender, layer);
     }
 
+    // Batch submission function for all parameters in one transaction
+    function submitAllParameters(
+        string[] memory layers,
+        int256[][] memory weights,
+        int256[][] memory biases
+    ) public {
+        require(
+            layers.length == weights.length && layers.length == biases.length,
+            "Array lengths must match"
+        );
+
+        for (uint256 i = 0; i < layers.length; i++) {
+            userWeights[msg.sender][layers[i]] = weights[i];
+            userBiases[msg.sender][layers[i]] = biases[i];
+        }
+
+        if (!hasSubmitted[msg.sender]) {
+            participants.push(msg.sender);
+            hasSubmitted[msg.sender] = true;
+        }
+
+        emit ParametersSubmitted(msg.sender, "batch");
+    }
+
     function averageParameters(string memory layer) public {
         require(participants.length > 0, "No participants yet");
 

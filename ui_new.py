@@ -2,7 +2,7 @@ import streamlit as st
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from model.nn_model import SimpleNN
+from model.nn_model import MedicalPredictor
 from web3 import Web3
 import json
 import numpy as np
@@ -14,9 +14,8 @@ import os
 with open('contract_info.json', 'r') as f:
     contract_info = json.load(f)
 
-w3 = Web3(Web3.HTTPProvider('http://127.0.0.1:7545'))
+w3 = Web3(Web3.HTTPProvider(contract_info['rpc_url']))
 contract = w3.eth.contract(address=contract_info['address'], abi=contract_info['abi'])
-w3.eth.default_account = w3.eth.accounts[0]
 
 st.title("Neural Network & Blockchain Integration UI")
 
