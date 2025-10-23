@@ -5,8 +5,8 @@ import solcx
 # Ganache local network configuration
 GANACHE_RPC_URL = 'http://127.0.0.1:7545'  # Updated to match user's RPC server
 # Use the user's provided Ganache account
-PRIVATE_KEY = '0x89b01d65e67dcc0a308f4741f3a26bb7fc6ea5a882a968c629644771e14df3e1'
-ACCOUNT_ADDRESS = '0x28A9DDaA088F81717e8b9fEDcEb2728516F39440'
+PRIVATE_KEY = '0x8bc316605eef23969de300774045274d7414b37a5805f637511a91a1a7425262'
+ACCOUNT_ADDRESS = '0x427e70dBE6072b288E945f4ea4B5A2073A51ee36'
 
 def deploy_to_ganache():
     try:

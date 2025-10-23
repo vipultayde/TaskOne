@@ -10,7 +10,7 @@ class HeartDiseasePredictor(nn.Module):
 
     def forward(self, x):
         x = torch.relu(self.fc1(x))
-        x = self.fc2(x)
+        x = torch.sigmoid(self.fc2(x))
         return x
 
     def get_parameters_as_int(self):

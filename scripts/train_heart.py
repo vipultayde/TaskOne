@@ -11,12 +11,12 @@ import json
 import numpy as np
 
 # Load contract info
-with open('contract_info.json', 'r') as f:
+with open('federated-medical-app/src/contract_info.json', 'r') as f:
     contract_info = json.load(f)
 
-# Connect to Sepolia
+# Connect to Ganache
 w3 = Web3(Web3.HTTPProvider(contract_info['rpc_url']))
-private_key = '067bd2c3138b1c1a9671f2da7b0acd48e7b4896a94eacf823322773a94065620'
+private_key = '0xb556f217e2c07afb634d64405c3c0703c46effd1894a9795fabdfdc5e5a032fa'
 account = w3.eth.account.from_key(private_key)
 w3.eth.default_account = account.address
 
@@ -32,6 +32,7 @@ df = pd.read_csv(data_path)
 
 # Prepare features and labels
 features = ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal']
+df = df.dropna(subset=['target'])  # Remove rows with NaN in target
 X = df[features].values
 y = df['target'].values
 
@@ -61,34 +62,25 @@ for epoch in range(200):
 
 print("Model trained successfully")
 
-# Get parameters and submit to blockchain
+# Get parameters and submit to blockchain as model hash
+import hashlib
+import json
+
 params = model.get_parameters_as_int()
+model_hash = hashlib.sha256(json.dumps(params, sort_keys=True).encode()).hexdigest()
 
-print("Submitting parameters to blockchain...")
-for layer, values in params.items():
-    if 'weight' in layer:
-        nonce = w3.eth.get_transaction_count(account.address)
-        tx = contract.functions.submitWeights(layer, values).build_transaction({
-            'chainId': 11155111,
-            'gas': 500000,
-            'gasPrice': w3.eth.gas_price * 3,
-            'nonce': nonce,
-        })
-        signed_tx = w3.eth.account.sign_transaction(tx, private_key)
-        tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
-        w3.eth.wait_for_transaction_receipt(tx_hash)
-        print(f"Submitted weights for {layer}")
-    elif 'bias' in layer:
-        nonce = w3.eth.get_transaction_count(account.address)
-        tx = contract.functions.submitBiases(layer, values).build_transaction({
-            'chainId': 11155111,
-            'gas': 500000,
-            'gasPrice': w3.eth.gas_price * 3,
-            'nonce': nonce,
-        })
-        signed_tx = w3.eth.account.sign_transaction(tx, private_key)
-        tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
-        w3.eth.wait_for_transaction_receipt(tx_hash)
-        print(f"Submitted biases for {layer}")
+print(f"Model hash: {model_hash}")
+print("Submitting model hash to blockchain...")
 
-print("Parameters submitted to federated learning contract")
+nonce = w3.eth.get_transaction_count(account.address)
+tx = contract.functions.submitModel(model_hash).build_transaction({
+    'chainId': 1337,
+    'gas': 500000,
+    'gasPrice': 1000000000,
+    'nonce': nonce,
+})
+signed_tx = w3.eth.account.sign_transaction(tx, private_key)
+tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+w3.eth.wait_for_transaction_receipt(tx_hash)
+
+print("Model hash submitted to federated learning contract")

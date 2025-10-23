@@ -2,62 +2,273 @@
 
 A blockchain-powered federated learning system for diabetes risk assessment using neural networks on Ethereum Sepolia testnet.
 
-## 🚀 Quick Start
+## 📋 Table of Contents
 
-### Prerequisites
+- [Overview](#overview)
+- [Architecture](#architecture)
+- [Low-Level Design (LLD)](#low-level-design-lld)
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Installation & Setup](#installation--setup)
+- [Usage](#usage)
+- [API Reference](#api-reference)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Security](#security)
+- [Contributing](#contributing)
+- [License](#license)
 
-- Python 3.8+
-- MetaMask wallet with Sepolia ETH (get free test ETH from https://sepoliafaucet.com/)
-- Node.js & npm (for React frontend)
-- Git
+## 🎯 Overview
 
-### 1. Install Python Dependencies
+This project implements a **privacy-preserving federated learning system** for medical prediction using blockchain technology. Users can train neural network models on their private medical data locally, then contribute only the mathematical parameters (weights and biases) to a shared model on Ethereum, without ever sharing their actual medical data.
 
-```bash
-pip install torch web3 streamlit numpy
+### Key Benefits:
+
+- ✅ **Privacy-First**: Medical data never leaves user devices
+- ✅ **Decentralized**: No central authority controls the data
+- ✅ **Transparent**: All model updates are recorded on blockchain
+- ✅ **Collaborative**: Multiple participants improve global model accuracy
+- ✅ **Cost-Effective**: Uses testnet for development, low gas fees
+
+## 🏗️ Architecture
+
+### High-Level Architecture
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   User Device   │    │   Smart Contract│    │   Blockchain    │
+│                 │    │                 │    │   (Sepolia)     │
+│ ┌─────────────┐ │    │ ┌─────────────┐ │    │                 │
+│ │Local Dataset│ │    │ │Federated    │ │    │ ┌─────────────┐ │
+│ │(Private)    │ │    │ │Learning     │ │    │ │Transaction  │ │
+│ └─────────────┘ │    │ │Contract     │ │    │ │History      │ │
+│                 │    │ └─────────────┘ │    │ └─────────────┘ │
+│                 │    │                 │    │                 │
+│ ┌─────────────┐ │    │ ┌─────────────┐ │    │ ┌─────────────┐ │
+│ │Neural       │ │    │ │Model Params │◄────┼──►│Global Model│ │
+│ │Network      │◄────┼──►│Storage      │ │    │ │Aggregation  │ │
+│ │Training     │ │    │ └─────────────┘ │    │ └─────────────┘ │
+│ └─────────────┘ │    │                 │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
-### 2. Deploy Smart Contract
+### Component Architecture
+
+1. **Frontend Layer (React + MetaMask)**
+
+   - User interface for model selection and training
+   - MetaMask wallet integration
+   - Real-time blockchain interaction
+
+2. **Backend Layer (Python + PyTorch)**
+
+   - Neural network training scripts
+   - Parameter serialization and submission
+   - Local model evaluation
+
+3. **Blockchain Layer (Solidity + Web3)**
+
+   - Smart contract for parameter storage
+   - Decentralized parameter aggregation
+   - Transparent transaction history
+
+4. **Data Layer**
+   - Local medical datasets (diabetes, heart disease)
+   - Off-chain parameter storage
+   - Secure data preprocessing
+
+## 📐 Low-Level Design (LLD)
+
+### Smart Contract Design
+
+```solidity
+contract FederatedLearning {
+    // State Variables
+    mapping(address => string) public modelHashes;        // User -> Model Hash
+    address[] public participants;                        // List of participants
+    mapping(address => bool) public hasSubmitted;         // Submission tracking
+    uint256 public submissionCount;                       // Total submissions
+    mapping(address => uint256) public predictions;       // Stored predictions
+
+    // Events
+    event ModelSubmitted(address user, string modelHash);
+    event PredictionMade(address user, uint256 prediction);
+
+    // Functions
+    function submitModel(string memory modelHash) public
+    function getParticipantCount() public view returns (uint256)
+    function getModelHash(address user) public view returns (string memory)
+    function storePrediction(uint256 prediction) public
+}
+```
+
+### Neural Network Architecture
+
+#### Diabetes Prediction Model
+
+```python
+class MedicalPredictor(nn.Module):
+    def __init__(self, input_size=8, hidden_size=16, output_size=1):
+        super().__init__()
+        self.fc1 = nn.Linear(8, 16)      # Input: 8 features
+        self.fc2 = nn.Linear(16, 8)      # Hidden layer
+        self.fc3 = nn.Linear(8, 1)       # Output: probability
+        self.dropout = nn.Dropout(0.2)
+
+    def forward(self, x):
+        x = torch.relu(self.fc1(x))
+        x = self.dropout(x)
+        x = torch.relu(self.fc2(x))
+        x = self.dropout(x)
+        return torch.sigmoid(self.fc3(x))
+```
+
+**Input Features (8):**
+
+- Pregnancies, Glucose, BloodPressure, SkinThickness
+- Insulin, BMI, DiabetesPedigreeFunction, Age
+
+**Output:** Diabetes risk probability (0-1)
+
+#### Heart Disease Prediction Model
+
+```python
+class HeartPredictor(nn.Module):
+    def __init__(self, input_size=13, hidden_size=32, output_size=1):
+        super().__init__()
+        self.fc1 = nn.Linear(13, 32)     # Input: 13 features
+        self.fc2 = nn.Linear(32, 16)     # Hidden layer
+        self.fc3 = nn.Linear(16, 1)      # Output: probability
+        self.dropout = nn.Dropout(0.3)
+
+    def forward(self, x):
+        x = torch.relu(self.fc1(x))
+        x = self.dropout(x)
+        x = torch.relu(self.fc2(x))
+        x = self.dropout(x)
+        return torch.sigmoid(self.fc3(x))
+```
+
+**Input Features (13):**
+
+- Age, Sex, Chest Pain Type, Resting BP, Cholesterol
+- Fasting Blood Sugar, Resting ECG, Max Heart Rate
+- Exercise Angina, ST Depression, ST Slope, Major Vessels, Thalassemia
+
+**Output:** Heart disease risk probability (0-1)
+
+### Data Flow Diagram
+
+```
+1. User selects model type (diabetes/heart)
+2. Local training on private dataset
+3. Parameter extraction and serialization
+4. Hash generation for integrity
+5. MetaMask transaction creation
+6. Smart contract parameter storage
+7. Global model aggregation
+8. Prediction using federated model
+```
+
+### Database Schema (Off-chain Storage)
+
+```json
+{
+  "contract_info": {
+    "address": "0x738702AcF262E8BC2Bf37cdFe8e53d39F573B04b",
+    "abi": [...],
+    "network": "sepolia",
+    "rpc_url": "https://sepolia.infura.io/v3/...",
+    "chain_id": 11155111
+  },
+  "model_parameters": {
+    "user_address": "0x...",
+    "model_hash": "0x...",
+    "parameters": {
+      "fc1.weight": [[...], [...]],
+      "fc1.bias": [...],
+      "fc2.weight": [[...], [...]],
+      "fc2.bias": [...]
+    },
+    "timestamp": 1234567890,
+    "model_type": "diabetes|heart"
+  }
+}
+```
+
+## ✨ Features
+
+### Core Features
+
+- 🔐 **Privacy-Preserving**: Medical data stays local
+- 🌐 **Decentralized**: Blockchain-based parameter sharing
+- 🤖 **AI-Powered**: PyTorch neural networks
+- 💰 **Cost-Effective**: Sepolia testnet deployment
+- 📱 **User-Friendly**: React web interface
+- 🔄 **Real-Time**: Live blockchain updates
+
+### Advanced Features
+
+- 📊 **Multi-Model Support**: Diabetes and heart disease
+- 🎯 **Model Aggregation**: Federated averaging
+- 📈 **Progress Tracking**: Training and prediction progress
+- 🔍 **Transaction Monitoring**: MetaMask integration
+- 📋 **Tutorial System**: Onboarding for new users
+- 🎨 **Responsive UI**: Mobile-friendly design
+
+## 📋 Prerequisites
+
+### System Requirements
+
+- **OS**: Windows 10/11, macOS, or Linux
+- **RAM**: 4GB minimum, 8GB recommended
+- **Storage**: 2GB free space
+- **Network**: Stable internet connection
+
+### Software Dependencies
+
+- **Python**: 3.8 or higher
+- **Node.js**: 16.x or higher
+- **npm**: 7.x or higher
+- **Git**: 2.x or higher
+- **MetaMask**: Browser extension
+
+### Blockchain Requirements
+
+- **Wallet**: MetaMask with Sepolia testnet configured
+- **Test ETH**: Free from [Sepolia Faucet](https://sepoliafaucet.com/)
+- **Network**: Sepolia testnet (chain ID: 11155111)
+
+## 🚀 Installation & Setup
+
+### 1. Clone Repository
 
 ```bash
+git clone https://github.com/yourusername/federated-medical-ai.git
+cd federated-medical-ai
+```
+
+### 2. Python Environment Setup
+
+```bash
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install torch web3 streamlit numpy pandas scikit-learn
+```
+
+### 3. Smart Contract Deployment
+
+```bash
+# Deploy to Sepolia testnet
 python scripts/deploy_sepolia.py
 ```
 
 This creates `contract_info.json` with deployment details.
 
-### 3. Train & Submit Parameters (Backend)
-
-For **Diabetes Prediction**:
-
-```bash
-python scripts/train.py
-```
-
-For **Heart Disease Prediction**:
-
-```bash
-python scripts/train_heart.py
-```
-
-Trains local NN model and submits parameters to blockchain.
-
-### 4. Average Parameters
-
-```bash
-python scripts/predict.py
-```
-
-Triggers on-chain parameter averaging from all participants.
-
-### 5. Launch Streamlit Web UI
-
-```bash
-streamlit run ui_new.py
-```
-
-Access at http://localhost:8503
-
-### 6. Launch React Frontend (Alternative UI)
+### 4. React Frontend Setup
 
 ```bash
 cd federated-medical-app
@@ -65,159 +276,215 @@ npm install
 npm start
 ```
 
-Access React app at http://localhost:3000 with MetaMask integration
+Access at http://localhost:3000
 
-## 🎯 React Frontend Setup (Detailed Steps)
+### 5. MetaMask Configuration
 
-### Prerequisites for React App
+1. Install MetaMask extension
+2. Switch to Sepolia testnet
+3. Get free test ETH from faucet
+4. Import your account if needed
 
-- Node.js 16+ and npm
-- MetaMask browser extension
-- Sepolia test ETH in your MetaMask wallet
+## 📖 Usage
 
-### Step-by-Step React Setup:
+### Basic Workflow
 
-1. **Navigate to React App Directory:**
+1. **Select Model**: Choose diabetes or heart disease prediction
+2. **Connect Wallet**: Link MetaMask to the application
+3. **Train Locally**: AI trains on your data (privacy preserved)
+4. **Submit Parameters**: Share model improvements on blockchain
+5. **Get Predictions**: Use enhanced global model for assessments
 
-   ```bash
-   cd federated-medical-app
-   ```
+### Training Scripts
 
-2. **Install Dependencies:**
+#### Diabetes Model Training
 
-   ```bash
-   npm install
-   ```
-
-   This installs ethers.js, axios, and other required packages.
-
-3. **Start Development Server:**
-
-   ```bash
-   npm start
-   ```
-
-   The app will open at http://localhost:3000
-
-4. **MetaMask Setup:**
-
-   - Ensure MetaMask is installed and connected to Sepolia testnet
-   - Make sure you have test ETH (faucet: https://sepoliafaucet.com/)
-
-5. **Using the React App:**
-   - Click "Connect MetaMask" (automatically switches to Sepolia)
-   - Click "🚀 Train & Submit Model Parameters" to participate
-   - View participant count and transaction confirmations
-
-### React App Features:
-
-- 🔗 MetaMask wallet integration
-- 🌐 Automatic Sepolia network switching
-- 🧠 Local neural network training simulation
-- ⛓️ Real-time blockchain parameter submission
-- 👥 Live participant count updates
-- 📊 Transaction status monitoring
-
-## 📁 Project Structure
-
-```
-├── contracts/
-│   └── FederatedLearning.sol      # Smart contract for parameter storage/averaging
-├── data/
-│   ├── diabetes.csv               # Pima Indians Diabetes Dataset (768 samples)
-│   └── heart_disease/
-│       └── heart.csv              # Cleveland Heart Disease Dataset (303 samples)
-├── model/
-│   ├── nn_model.py                # PyTorch neural network for diabetes prediction
-│   └── heart_model.py             # PyTorch neural network for heart disease prediction
-├── scripts/
-│   ├── deploy_sepolia.py          # Contract deployment to Sepolia
-│   ├── train.py                   # Diabetes training & blockchain submission
-│   ├── train_heart.py             # Heart disease training & blockchain submission
-│   └── predict.py                 # Parameter averaging & prediction testing
-├── federated-medical-app/         # React frontend with MetaMask integration
-├── ui_new.py                      # Streamlit web interface
-├── contract_info.json             # Deployed contract details
-└── README.md
+```bash
+python scripts/train.py
 ```
 
-## 🔧 How It Works
+#### Heart Disease Model Training
 
-1. **Local Training**: Users train NN models on their private medical data
-2. **Parameter Submission**: Trained weights/biases sent to blockchain (gas fees apply)
-3. **Federated Averaging**: Smart contract averages parameters from all participants
-4. **Global Model**: UI loads averaged parameters for real-time predictions
-5. **Privacy**: Medical data never leaves user devices
+```bash
+python scripts/train_heart.py
+```
 
-## 💰 Gas Fees
+### Web Interface Usage
 
-- **Parameter Submission**: ~0.001 ETH per submission
-- **Network**: Sepolia testnet (free faucet ETH available)
-- **Privacy**: Only mathematical parameters sent, no medical data
+#### React Frontend (http://localhost:3000)
 
-## 🔐 Privacy & Security
+- Click "Connect MetaMask" (auto-switches to Sepolia)
+- Select medical model type
+- Click "Train & Submit Model" to participate
+- Enter medical data for risk assessment
+- View prediction results
 
-- ✅ Medical data stays local
-- ✅ Only NN parameters shared on blockchain
-- ✅ Decentralized parameter averaging
-- ✅ No central data collection
+#### Streamlit UI (http://localhost:8501)
 
-## 🏥 Medical Features
+```bash
+streamlit run ui_new.py
+```
 
-### Diabetes Prediction Model
+## 🔧 API Reference
 
-The diabetes model uses the **Pima Indians Diabetes Dataset** with 8 features:
+### Smart Contract Functions
 
-- **Pregnancies**: Number of times pregnant
-- **Glucose**: Plasma glucose concentration (mg/dL)
-- **BloodPressure**: Diastolic blood pressure (mm Hg)
-- **SkinThickness**: Triceps skin fold thickness (mm)
-- **Insulin**: 2-Hour serum insulin (mu U/ml)
-- **BMI**: Body mass index (weight in kg/(height in m)^2)
-- **DiabetesPedigreeFunction**: Diabetes pedigree function
-- **Age**: Age (years)
+#### `submitModel(string modelHash)`
 
-**Dataset Source**: The Pima Indians Diabetes Dataset is a publicly available dataset from the UCI Machine Learning Repository, containing 768 samples from Pima Indian women aged 21 and above.
+Submits a model hash to the blockchain.
 
-### Heart Disease Prediction Model
+**Parameters:**
 
-The heart disease model uses the **Cleveland Heart Disease Dataset** with 13 features:
+- `modelHash`: SHA-256 hash of model parameters
 
-- **Age**: Age in years
-- **Sex**: Sex (1 = male; 0 = female)
-- **CP**: Chest pain type (0-3)
-- **Trestbps**: Resting blood pressure (mm Hg)
-- **Chol**: Serum cholesterol (mg/dl)
-- **FBS**: Fasting blood sugar > 120 mg/dl (1 = true; 0 = false)
-- **Restecg**: Resting electrocardiographic results (0-2)
-- **Thalach**: Maximum heart rate achieved
-- **Exang**: Exercise induced angina (1 = yes; 0 = no)
-- **Oldpeak**: ST depression induced by exercise relative to rest
-- **Slope**: Slope of the peak exercise ST segment (0-2)
-- **CA**: Number of major vessels colored by fluoroscopy (0-3)
-- **Thal**: Thalassemia (1 = normal; 2 = fixed defect; 3 = reversable defect)
+**Events Emitted:**
 
-**Dataset Source**: The Cleveland Heart Disease Dataset is a publicly available dataset from the UCI Machine Learning Repository, containing 303 samples for heart disease diagnosis.
+- `ModelSubmitted(address user, string modelHash)`
 
-## 🛠️ Technical Details
+#### `getParticipantCount() → uint256`
 
-- **Blockchain**: Ethereum Sepolia testnet
-- **Smart Contract**: Solidity with parameter averaging logic
-- **ML Framework**: PyTorch neural network
-- **Web3**: Python web3.py for blockchain interaction
-- **UI**: Streamlit with MetaMask integration
+Returns the total number of participants.
 
-## 📊 Usage Flow
+#### `getModelHash(address user) → string`
 
-1. Deploy contract to Sepolia
-2. Multiple users run `train.py` to submit parameters
-3. Run `predict.py` to average parameters
-4. Launch UI for predictions using federated model
+Returns the model hash for a specific user.
+
+#### `storePrediction(uint256 prediction)`
+
+Stores a prediction result on-chain.
+
+### Python Classes
+
+#### `MedicalPredictor`
+
+Neural network class for medical prediction.
+
+**Methods:**
+
+- `__init__(input_size, hidden_size, output_size)`: Initialize network
+- `forward(x)`: Forward pass
+- `get_parameters_as_int()`: Serialize parameters for blockchain
+- `set_parameters_from_int(params)`: Deserialize parameters
+
+## 🧪 Testing
+
+### Unit Tests
+
+```bash
+# Run Python tests
+python -m pytest tests/
+
+# Run contract tests
+truffle test
+```
+
+### Integration Tests
+
+```bash
+# Test full federated learning cycle
+python scripts/test_integration.py
+```
+
+### Manual Testing Checklist
+
+- [ ] MetaMask connection works
+- [ ] Network switches to Sepolia automatically
+- [ ] Model training completes successfully
+- [ ] Parameter submission transactions confirm
+- [ ] Prediction functionality works
+- [ ] UI updates in real-time
+
+## 🚢 Deployment
+
+### Local Development
+
+```bash
+# Start all services
+npm start              # React frontend (port 3000)
+streamlit run ui_new.py # Streamlit UI (port 8501)
+```
+
+### Production Deployment
+
+```bash
+# Build React app
+cd federated-medical-app
+npm run build
+
+# Deploy to web server
+# Copy build/ folder to your web server
+```
+
+### Contract Deployment
+
+```bash
+# Deploy to different networks
+python scripts/deploy_mainnet.py    # Ethereum mainnet
+python scripts/deploy_polygon.py    # Polygon network
+```
+
+## 🔒 Security
+
+### Privacy Measures
+
+- **Local Training**: All data processing happens client-side
+- **Parameter Only**: Only mathematical weights shared, not raw data
+- **Hash Verification**: Model integrity through cryptographic hashing
+- **No Data Storage**: Medical data never stored on blockchain
+
+### Smart Contract Security
+
+- **Access Control**: Only authorized functions can modify state
+- **Input Validation**: All inputs validated before processing
+- **Gas Optimization**: Efficient gas usage to minimize costs
+- **Event Logging**: All state changes logged for transparency
+
+### Frontend Security
+
+- **MetaMask Integration**: Secure wallet communication
+- **Input Sanitization**: All user inputs validated
+- **HTTPS Only**: Secure communication channels
+- **CORS Protection**: Cross-origin request protection
 
 ## 🤝 Contributing
 
-Users contribute by training local models and submitting parameters, improving the global model's accuracy through federated learning.
+We welcome contributions! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development Guidelines
+
+- Follow PEP 8 for Python code
+- Use ESLint for JavaScript/React code
+- Write comprehensive tests
+- Update documentation
+- Ensure cross-platform compatibility
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **Datasets**: UCI Machine Learning Repository
+- **PyTorch**: For neural network framework
+- **Ethereum**: For blockchain infrastructure
+- **MetaMask**: For wallet integration
+- **Open Source Community**: For invaluable tools and libraries
+
+## 📞 Support
+
+For support and questions:
+
+- 📧 Email: support@federatedmedical.ai
+- 💬 Discord: [Join our community](https://discord.gg/federatedmedical)
+- 📖 Documentation: [Full docs](https://docs.federatedmedical.ai)
+- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/federated-medical-ai/issues)
 
 ---
 
-Built with ❤️ for privacy-preserving AI in healthcare
+**Built with ❤️ for privacy-preserving healthcare AI**
