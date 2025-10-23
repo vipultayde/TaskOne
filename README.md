@@ -481,7 +481,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 For support and questions:
 
 - 📧 Email: vipultayde14@gmail.com
-- 📖 Documentation: [Full docs]([https://docs.federatedmedical.ai](https://docs.google.com/document/d/1ykW0UcKkzdZte1l0Gr2RBrpAbSlOmyhv2T_pbpwqKic/edit?usp=sharing))
+- 📖 Documentation: [Full docs](https://docs.google.com/document/d/1ykW0UcKkzdZte1l0Gr2RBrpAbSlOmyhv2T_pbpwqKic/edit?tab=t.0)
 
 ---
 
