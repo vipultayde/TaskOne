@@ -480,10 +480,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 For support and questions:
 
-- 📧 Email: support@federatedmedical.ai
-- 💬 Discord: [Join our community](https://discord.gg/federatedmedical)
-- 📖 Documentation: [Full docs](https://docs.federatedmedical.ai)
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/federated-medical-ai/issues)
+- 📧 Email: vipultayde14@gmail.com
+- 📖 Documentation: [Full docs]([https://docs.federatedmedical.ai](https://docs.google.com/document/d/1ykW0UcKkzdZte1l0Gr2RBrpAbSlOmyhv2T_pbpwqKic/edit?usp=sharing))
 
 ---
 
