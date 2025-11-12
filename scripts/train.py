@@ -11,12 +11,12 @@ import json
 import numpy as np
 
 # Load contract info
-with open('contract_info.json', 'r') as f:
+with open('federated-medical-app/src/contract_info.json', 'r') as f:
     contract_info = json.load(f)
 
-# Connect to Sepolia
+# Connect to Ganache
 w3 = Web3(Web3.HTTPProvider(contract_info['rpc_url']))
-private_key = '067bd2c3138b1c1a9671f2da7b0acd48e7b4896a94eacf823322773a94065620'
+private_key = '0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d'  # Account 0 from Ganache
 account = w3.eth.account.from_key(private_key)
 w3.eth.default_account = account.address
 
@@ -64,31 +64,23 @@ print("Model trained successfully")
 # Get parameters and submit to blockchain
 params = model.get_parameters_as_int()
 
-print("Submitting parameters to blockchain...")
-for layer, values in params.items():
-    if 'weight' in layer:
-        nonce = w3.eth.get_transaction_count(account.address)
-        tx = contract.functions.submitWeights(layer, values).build_transaction({
-            'chainId': 11155111,
-            'gas': 500000,
-            'gasPrice': w3.eth.gas_price * 3,
-            'nonce': nonce,
-        })
-        signed_tx = w3.eth.account.sign_transaction(tx, private_key)
-        tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
-        w3.eth.wait_for_transaction_receipt(tx_hash)
-        print(f"Submitted weights for {layer}")
-    elif 'bias' in layer:
-        nonce = w3.eth.get_transaction_count(account.address)
-        tx = contract.functions.submitBiases(layer, values).build_transaction({
-            'chainId': 11155111,
-            'gas': 500000,
-            'gasPrice': w3.eth.gas_price * 3,
-            'nonce': nonce,
-        })
-        signed_tx = w3.eth.account.sign_transaction(tx, private_key)
-        tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
-        w3.eth.wait_for_transaction_receipt(tx_hash)
-        print(f"Submitted biases for {layer}")
+print("Submitting model hash to blockchain...")
+# Generate a mock model hash (in real implementation, this would be the hash of trained model parameters)
+model_hash = "0x" + np.random.bytes(32).hex()  # Mock hash
 
+nonce = w3.eth.get_transaction_count(account.address)
+tx = contract.functions.submitModel(model_hash).build_transaction({
+    'chainId': 1337,  # Ganache chain ID
+    'gas': 200000,
+    'gasPrice': 20000000000,  # 20 gwei
+    'nonce': nonce,
+})
+
+signed_tx = w3.eth.account.sign_transaction(tx, private_key)
+tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+
+print(f"✅ Model hash submitted successfully!")
+print(f"Transaction hash: {tx_hash.hex()}")
+print(f"Block number: {receipt['blockNumber']}")
 print("Parameters submitted to federated learning contract")
